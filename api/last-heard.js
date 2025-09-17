@@ -9,12 +9,21 @@ module.exports = async (req, res) => {
         const $ = cheerio.load(data);
 
         const lastHeardData = [];
-        const table = $('table').first();
 
+        // A tabela parece estar dentro de um elemento com a classe "container"
+        const table = $('.container table').first(); 
+        
+        // Verifica se a tabela foi encontrada
+        if (table.length === 0) {
+            return res.status(500).json({ error: 'Tabela não encontrada na página.' });
+        }
+
+        // Seleciona todas as linhas da tabela (<tr>)
         table.find('tr').each((i, element) => {
             const columns = $(element).find('td');
 
-            if (columns.length > 0) {
+            // Verifica se a linha tem as 9 colunas esperadas
+            if (columns.length === 9) {
                 const row = {
                     hora: $(columns[0]).text().trim(),
                     indicativo: $(columns[1]).text().trim(),
@@ -30,11 +39,14 @@ module.exports = async (req, res) => {
             }
         });
 
-        lastHeardData.shift();
+        // A primeira linha pode ser o cabeçalho, se tiver dados, o slice remove a primeira
+        if (lastHeardData.length > 0) {
+            lastHeardData.shift(); 
+        }
 
         res.status(200).json(lastHeardData);
 
     } catch (error) {
-        res.status(500).json({ error: 'Erro ao obter dados.' });
+        res.status(500).json({ error: 'Erro ao obter dados: ' + error.message });
     }
 };
