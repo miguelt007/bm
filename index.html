@@ -13,6 +13,19 @@
         h1 {
             color: #333;
         }
+        .filters {
+            margin-bottom: 20px;
+        }
+        .filters label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .filters select {
+            padding: 8px;
+            font-size: 1em;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -48,6 +61,18 @@
 
     <h1>BrandMeister - Last Heard</h1>
     
+    <div class="filters">
+        <label for="callsign-filter">Filtrar por Indicativo:</label>
+        <select id="callsign-filter">
+            <option value="">Todos</option>
+        </select>
+        
+        <label for="tg-filter">Filtrar por TG:</label>
+        <select id="tg-filter">
+            <option value="">Todos</option>
+        </select>
+    </div>
+
     <div id="loading" class="loading">
         A carregar dados...
     </div>
@@ -72,54 +97,112 @@
 
     <script>
         const API_URL = 'https://bm-psi.vercel.app/api/last-heard';
+        let allData = []; // Variável global para guardar todos os dados
         
-        async function fetchLastHeard() {
-            const tableBody = document.querySelector('#heardTable tbody');
-            const loadingMessage = document.getElementById('loading');
-            const table = document.getElementById('heardTable');
+        const callsignFilter = document.getElementById('callsign-filter');
+        const tgFilter = document.getElementById('tg-filter');
+        const tableBody = document.querySelector('#heardTable tbody');
+        const loadingMessage = document.getElementById('loading');
+        const table = document.getElementById('heardTable');
+        
+        // Função para preencher a tabela com os dados filtrados
+        function renderTable(dataToRender) {
+            tableBody.innerHTML = ''; // Limpar a tabela
 
-            // Mostrar a mensagem de carregamento e esconder a tabela
-            loadingMessage.style.display = 'block';
-            table.style.display = 'none';
-            tableBody.innerHTML = ''; // Limpar a tabela antes de carregar novos dados
+            dataToRender.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item[2] ? new Date(item[2] * 1000).toLocaleString() : ''}</td>
+                    <td>${item[21] || ''}</td>
+                    <td>${item[22] || ''}</td>
+                    <td>${item[4] || ''}</td>
+                    <td>${item[10] || ''}</td>
+                    <td>${item[7] || ''}</td>
+                    <td>${item[20] || ''}</td>
+                    <td>${item[15] || ''}</td>
+                    <td>${item[17] || ''}</td>
+                `;
+                tableBody.appendChild(row);
+            });
 
-            try {
-                const response = await fetch(API_URL);
-                const data = await response.json();
-
-                // Para cada item nos dados JSON, criar uma nova linha na tabela
-                data.forEach(item => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${item[2] ? new Date(item[2] * 1000).toLocaleString() : ''}</td>
-                        <td>${item[21] || ''}</td>
-                        <td>${item[22] || ''}</td>
-                        <td>${item[4] || ''}</td>
-                        <td>${item[10] || ''}</td>
-                        <td>${item[7] || ''}</td>
-                        <td>${item[20] || ''}</td>
-                        <td>${item[15] || ''}</td>
-                        <td>${item[17] || ''}</td>
-                    `;
-                    tableBody.appendChild(row);
-                });
-
-            } catch (error) {
-                console.error('Erro ao obter dados:', error);
-                loadingMessage.innerText = 'Erro ao carregar os dados. Tente novamente mais tarde.';
-                return;
-            }
-
-            // Esconder a mensagem de carregamento e mostrar a tabela
             loadingMessage.style.display = 'none';
             table.style.display = 'table';
         }
 
-        // Chamar a função para carregar os dados quando a página for carregada
-        fetchLastHeard();
+        // Função para preencher os filtros com valores únicos
+        function populateFilters(data) {
+            const callsigns = new Set();
+            const tgs = new Set();
 
-        // Atualizar os dados a cada 30 segundos (30000 milissegundos)
-        setInterval(fetchLastHeard, 30000);
+            data.forEach(item => {
+                if (item[21]) callsigns.add(item[21]);
+                if (item[10]) tgs.add(item[10]);
+            });
+
+            callsigns.forEach(callsign => {
+                const option = document.createElement('option');
+                option.value = callsign;
+                option.textContent = callsign;
+                callsignFilter.appendChild(option);
+            });
+
+            tgs.forEach(tg => {
+                const option = document.createElement('option');
+                option.value = tg;
+                option.textContent = tg;
+                tgFilter.appendChild(option);
+            });
+        }
+        
+        // Função que aplica os filtros e atualiza a tabela
+        function applyFilters() {
+            const selectedCallsign = callsignFilter.value;
+            const selectedTg = tgFilter.value;
+
+            let filteredData = allData;
+
+            if (selectedCallsign) {
+                filteredData = filteredData.filter(item => item[21] === selectedCallsign);
+            }
+
+            if (selectedTg) {
+                filteredData = filteredData.filter(item => item[10] === selectedTg);
+            }
+
+            renderTable(filteredData);
+        }
+
+        // Adicionar eventos para os filtros
+        callsignFilter.addEventListener('change', applyFilters);
+        tgFilter.addEventListener('change', applyFilters);
+        
+        // Função principal para buscar dados da API
+        async function fetchAndRender() {
+            loadingMessage.style.display = 'block';
+            table.style.display = 'none';
+
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                
+                // Guardar todos os dados numa variável global
+                allData = data; 
+                
+                // Preencher os filtros e a tabela pela primeira vez
+                populateFilters(allData);
+                renderTable(allData);
+
+            } catch (error) {
+                console.error('Erro ao obter dados:', error);
+                loadingMessage.innerText = 'Erro ao carregar os dados. Tente novamente mais tarde.';
+            }
+        }
+
+        // Chamar a função principal quando a página carregar
+        fetchAndRender();
+
+        // Atualizar os dados a cada 30 segundos
+        setInterval(fetchAndRender, 30000);
     </script>
 
 </body>
