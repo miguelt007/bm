@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BrandMeister - Live Hops</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #brandmeister-data ul {
+            list-style: none;
+            padding: 0;
+        }
+        #brandmeister-data li {
+            background: #e9ecef;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 5px solid #007bff;
+        }
+        #loading-message, #error-message {
+            text-align: center;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Últimas Comunicações (Live Hops)</h1>
+        
+        <div id="brandmeister-data">
+            <p id="loading-message">A carregar dados...</p>
+        </div>
+    </div>
+
+    <script>
+        // A URL da API. Este é um EXEMPLO e pode precisar ser alterado.
+        // A BrandMeister pode ter uma URL específica para a API em formato JSON.
+        const apiUrl = 'https://api.brandmeister.network/v1.0/last_heard?destinationId=268';
+
+        // Obtém o elemento onde vamos mostrar os dados.
+        const dataContainer = document.getElementById('brandmeister-data');
+
+        // Função para mostrar uma mensagem de erro na página.
+        function displayError(message) {
+            dataContainer.innerHTML = `<p id="error-message">Erro: ${message}</p>`;
+        }
+
+        // Faz o pedido à API para obter os dados.
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Falha no pedido: ${response.status} ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Limpa a mensagem de carregamento.
+                dataContainer.innerHTML = '';
+                
+                // Cria uma lista não ordenada para os itens.
+                const ul = document.createElement('ul');
+
+                // Itera sobre os dados e cria um item de lista para cada um.
+                // A estrutura dos dados (item.callsign, etc.) é baseada num exemplo de API.
+                data.forEach(item => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <strong>Callsign:</strong> ${item.callsign} <br>
+                        <strong>Duração:</strong> ${item.duration}s <br>
+                        <strong>Data/Hora:</strong> ${new Date(item.datetime).toLocaleString()}
+                    `;
+                    ul.appendChild(li);
+                });
+
+                // Adiciona a lista ao contêiner.
+                dataContainer.appendChild(ul);
+            })
+            .catch(error => {
+                console.error('Ocorreu um erro ao carregar os dados:', error);
+                displayError('Não foi possível carregar os dados. Verifique o URL da API e as permissões de CORS.');
+            });
+
+    </script>
+</body>
+</html>
