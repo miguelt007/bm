@@ -19,15 +19,18 @@ export default async function handler(request, response) {
       throw new Error(`Falha ao buscar dados: ${apiResponse.status} ${apiResponse.statusText}`);
     }
 
-    // Lê a resposta como texto (ou JSON, se for o caso)
+    // Lê a resposta como texto (HTML), uma vez que a página não é uma API JSON
     const data = await apiResponse.text();
+
+    // ADICIONADO PARA DEBUG: Mostra o conteúdo recebido nos logs do Vercel
+    console.log('Conteúdo HTML recebido do BrandMeister:', data); 
 
     // Define os cabeçalhos para que o seu navegador possa aceitar a resposta
     response.setHeader('Access-Control-Allow-Origin', '*');
     response.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    // Envia os dados de volta para a sua página web
+    // Envia os dados (HTML) de volta para a sua página web
     response.status(200).send(data);
 
   } catch (error) {
