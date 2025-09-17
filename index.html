@@ -105,10 +105,8 @@
         const loadingMessage = document.getElementById('loading');
         const table = document.getElementById('heardTable');
         
-        // Função para preencher a tabela com os dados filtrados
         function renderTable(dataToRender) {
-            tableBody.innerHTML = ''; // Limpar a tabela
-
+            tableBody.innerHTML = '';
             dataToRender.forEach(item => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -124,29 +122,31 @@
                 `;
                 tableBody.appendChild(row);
             });
-
             loadingMessage.style.display = 'none';
             table.style.display = 'table';
         }
 
-        // Função para preencher os filtros com valores únicos
         function populateFilters(data) {
             const callsigns = new Set();
             const tgs = new Set();
-
+            
             data.forEach(item => {
                 if (item[21]) callsigns.add(item[21]);
                 if (item[10]) tgs.add(item[10]);
             });
 
-            callsigns.forEach(callsign => {
+            // Ordenar os Indicativos
+            const sortedCallsigns = Array.from(callsigns).sort();
+            sortedCallsigns.forEach(callsign => {
                 const option = document.createElement('option');
                 option.value = callsign;
                 option.textContent = callsign;
                 callsignFilter.appendChild(option);
             });
 
-            tgs.forEach(tg => {
+            // Ordenar os TGs numericamente
+            const sortedTGs = Array.from(tgs).sort((a, b) => a - b);
+            sortedTGs.forEach(tg => {
                 const option = document.createElement('option');
                 option.value = tg;
                 option.textContent = tg;
@@ -154,29 +154,24 @@
             });
         }
         
-        // Função que aplica os filtros e atualiza a tabela
         function applyFilters() {
             const selectedCallsign = callsignFilter.value;
             const selectedTg = tgFilter.value;
-
             let filteredData = allData;
-
+            
             if (selectedCallsign) {
                 filteredData = filteredData.filter(item => item[21] === selectedCallsign);
             }
-
             if (selectedTg) {
-                filteredData = filteredData.filter(item => item[10] === selectedTg);
+                filteredData = filteredData.filter(item => item[10] === parseInt(selectedTg));
             }
 
             renderTable(filteredData);
         }
 
-        // Adicionar eventos para os filtros
         callsignFilter.addEventListener('change', applyFilters);
         tgFilter.addEventListener('change', applyFilters);
         
-        // Função principal para buscar dados da API
         async function fetchAndRender() {
             loadingMessage.style.display = 'block';
             table.style.display = 'none';
@@ -184,24 +179,17 @@
             try {
                 const response = await fetch(API_URL);
                 const data = await response.json();
-                
-                // Guardar todos os dados numa variável global
                 allData = data; 
                 
-                // Preencher os filtros e a tabela pela primeira vez
                 populateFilters(allData);
                 renderTable(allData);
-
             } catch (error) {
                 console.error('Erro ao obter dados:', error);
                 loadingMessage.innerText = 'Erro ao carregar os dados. Tente novamente mais tarde.';
             }
         }
 
-        // Chamar a função principal quando a página carregar
         fetchAndRender();
-
-        // Atualizar os dados a cada 30 segundos
         setInterval(fetchAndRender, 30000);
     </script>
 
