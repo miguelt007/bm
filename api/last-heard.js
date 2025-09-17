@@ -9,9 +9,8 @@ module.exports = async (req, res) => {
         const $ = cheerio.load(data);
 
         const lastHeardData = [];
-        const table = $('table').first(); // Seleciona a primeira tabela que aparece
+        const table = $('table').first();
 
-        // Encontra as linhas da tabela (td)
         table.find('tr').each((i, element) => {
             const columns = $(element).find('td');
 
@@ -31,14 +30,11 @@ module.exports = async (req, res) => {
             }
         });
 
-        // Remove a linha de cabeçalho, se existir
         lastHeardData.shift();
 
-        // Envia a resposta JSON
         res.status(200).json(lastHeardData);
 
     } catch (error) {
-        // Se houver um erro, envia uma mensagem de erro
         res.status(500).json({ error: 'Erro ao obter dados.' });
     }
 };
