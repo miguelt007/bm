@@ -47,53 +47,67 @@
     </div>
 
     <script>
-        // A URL da API. Este é um EXEMPLO e pode precisar ser alterado.
-        // A BrandMeister pode ter uma URL específica para a API em formato JSON.
+        // O URL do seu proxy no Vercel, que irá buscar a página da BrandMeister
         const apiUrl = 'https://bm-psi.vercel.app/api/proxy?page=lh&DestinationID=268';
-
-        // Obtém o elemento onde vamos mostrar os dados.
         const dataContainer = document.getElementById('brandmeister-data');
 
-        // Função para mostrar uma mensagem de erro na página.
         function displayError(message) {
-            dataContainer.innerHTML = `<p id="error-message">Erro: ${message}</p>`;
+            dataContainer.innerHTML = `<p id="error-message" style="color: red;">Erro: ${message}</p>`;
         }
 
-        // Faz o pedido à API para obter os dados.
         fetch(apiUrl)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`Falha no pedido: ${response.status} ${response.statusText}`);
                 }
-                return response.json();
+                // Busca o conteúdo como texto (HTML), não como JSON
+                return response.text();
             })
-            .then(data => {
-                // Limpa a mensagem de carregamento.
+            .then(htmlString => {
+                // Limpa a mensagem de carregamento
                 dataContainer.innerHTML = '';
+
+                // Usa o DOMParser para analisar o texto HTML
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlString, 'text/html');
+
+                // Encontra a tabela com a informação (a classe é "table table-condensed")
+                const table = doc.querySelector('table.table-condensed');
+                if (!table) {
+                    throw new Error("Não foi possível encontrar a tabela de dados na página da BrandMeister.");
+                }
+
+                // Encontra todas as linhas de dados na tabela (todas as <tr>)
+                const rows = table.querySelectorAll('tbody tr');
                 
-                // Cria uma lista não ordenada para os itens.
+                // Cria uma lista para mostrar os resultados
                 const ul = document.createElement('ul');
 
-                // Itera sobre os dados e cria um item de lista para cada um.
-                // A estrutura dos dados (item.callsign, etc.) é baseada num exemplo de API.
-                data.forEach(item => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `
-                        <strong>Callsign:</strong> ${item.callsign} <br>
-                        <strong>Duração:</strong> ${item.duration}s <br>
-                        <strong>Data/Hora:</strong> ${new Date(item.datetime).toLocaleString()}
-                    `;
-                    ul.appendChild(li);
+                rows.forEach(row => {
+                    const cols = row.querySelectorAll('td');
+                    if (cols.length > 5) {
+                        const li = document.createElement('li');
+                        
+                        // Extrai o texto de cada coluna (célula da tabela)
+                        const callsign = cols[2].textContent.trim();
+                        const duration = cols[5].textContent.trim();
+                        const timestamp = cols[0].textContent.trim();
+                        
+                        li.innerHTML = `
+                            <strong>Indicativo:</strong> ${callsign} <br>
+                            <strong>Duração:</strong> ${duration} <br>
+                            <strong>Data/Hora:</strong> ${timestamp}
+                        `;
+                        ul.appendChild(li);
+                    }
                 });
 
-                // Adiciona a lista ao contêiner.
                 dataContainer.appendChild(ul);
             })
             .catch(error => {
                 console.error('Ocorreu um erro ao carregar os dados:', error);
-                displayError('Não foi possível carregar os dados. Verifique o URL da API e as permissões de CORS.');
+                displayError('Não foi possível carregar os dados. Verifique se o formato da página da BrandMeister não foi alterado.');
             });
-
     </script>
 </body>
 </html>
