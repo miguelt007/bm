@@ -1,0 +1,16 @@
+{
+  "name": "brandmeister-api",
+  "version": "1.0.0",
+  "description": "API para obter dados do BrandMeister",
+  "main": "index.js",
+  "scripts": {
+    "start": "vercel dev"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.8",
+    "cheerio": "^1.0.0-rc.12"
+  }
+}
