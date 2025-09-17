@@ -3,110 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BrandMeister - Live Hops</title>
+    <title>BrandMeister - Last Heard</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
             background-color: #f4f4f4;
+        }
+        h1 {
             color: #333;
         }
-        .container {
-            max-width: 800px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        #brandmeister-data ul {
-            list-style: none;
-            padding: 0;
+        th, td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            text-align: left;
         }
-        #brandmeister-data li {
-            background: #e9ecef;
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 5px;
-            border-left: 5px solid #007bff;
+        th {
+            background-color: #0056b3;
+            color: #fff;
+            cursor: pointer;
         }
-        #loading-message, #error-message {
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .loading {
             text-align: center;
-            font-style: italic;
+            padding: 20px;
+            font-size: 1.2em;
+            color: #555;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Últimas Comunicações (Live Hops)</h1>
-        
-        <div id="brandmeister-data">
-            <p id="loading-message">A carregar dados...</p>
-        </div>
+    <h1>BrandMeister - Last Heard</h1>
+    
+    <div id="loading" class="loading">
+        A carregar dados...
     </div>
 
-    <script>
-        const apiUrl = 'https://bm-psi.vercel.app/api/proxy?page=lh&DestinationID=268';
-        const dataContainer = document.getElementById('brandmeister-data');
+    <table id="heardTable" style="display: none;">
+        <thead>
+            <tr>
+                <th>Hora</th>
+                <th>Indicativo</th>
+                <th>Nome</th>
+                <th>Local</th>
+                <th>TG</th>
+                <th>Slot</th>
+                <th>Servidor</th>
+                <th>RSSI</th>
+                <th>Loss</th>
+            </tr>
+        </thead>
+        <tbody>
+            </tbody>
+    </table>
 
-        function displayError(message) {
-            dataContainer.innerHTML = `<p id="error-message" style="color: red;">Erro: ${message}</p>`;
+    <script>
+        const API_URL = 'https://bm-psi.vercel.app/api/last-heard';
+        
+        async function fetchLastHeard() {
+            const tableBody = document.querySelector('#heardTable tbody');
+            const loadingMessage = document.getElementById('loading');
+            const table = document.getElementById('heardTable');
+
+            // Mostrar a mensagem de carregamento e esconder a tabela
+            loadingMessage.style.display = 'block';
+            table.style.display = 'none';
+            tableBody.innerHTML = ''; // Limpar a tabela antes de carregar novos dados
+
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+
+                // Para cada item nos dados JSON, criar uma nova linha na tabela
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item[2] ? new Date(item[2] * 1000).toLocaleString() : ''}</td>
+                        <td>${item[21] || ''}</td>
+                        <td>${item[22] || ''}</td>
+                        <td>${item[4] || ''}</td>
+                        <td>${item[10] || ''}</td>
+                        <td>${item[7] || ''}</td>
+                        <td>${item[20] || ''}</td>
+                        <td>${item[15] || ''}</td>
+                        <td>${item[17] || ''}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+            } catch (error) {
+                console.error('Erro ao obter dados:', error);
+                loadingMessage.innerText = 'Erro ao carregar os dados. Tente novamente mais tarde.';
+                return;
+            }
+
+            // Esconder a mensagem de carregamento e mostrar a tabela
+            loadingMessage.style.display = 'none';
+            table.style.display = 'table';
         }
 
-        fetch(apiUrl)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Falha no pedido: ${response.status} ${response.statusText}`);
-                }
-                return response.text();
-            })
-            .then(htmlString => {
-                dataContainer.innerHTML = '';
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(htmlString, 'text/html');
+        // Chamar a função para carregar os dados quando a página for carregada
+        fetchLastHeard();
 
-                // A Nova Lógica de Verificação
-                let dataTable = null;
-                const tables = doc.querySelectorAll('table');
-                
-                tables.forEach(table => {
-                    if (table.classList.contains('table-condensed')) {
-                        dataTable = table;
-                    }
-                });
-
-                if (!dataTable) {
-                    throw new Error("Não foi possível encontrar a tabela de dados na página da BrandMeister. Verifique o código fonte para a classe correta.");
-                }
-
-                const rows = dataTable.querySelectorAll('tbody tr');
-                const ul = document.createElement('ul');
-
-                rows.forEach(row => {
-                    const cols = row.querySelectorAll('td');
-                    if (cols.length > 5) {
-                        const li = document.createElement('li');
-                        
-                        const callsign = cols[2].textContent.trim();
-                        const duration = cols[5].textContent.trim();
-                        const timestamp = cols[0].textContent.trim();
-                        
-                        li.innerHTML = `
-                            <strong>Indicativo:</strong> ${callsign} <br>
-                            <strong>Duração:</strong> ${duration} <br>
-                            <strong>Data/Hora:</strong> ${timestamp}
-                        `;
-                        ul.appendChild(li);
-                    }
-                });
-
-                dataContainer.appendChild(ul);
-            })
-            .catch(error => {
-                console.error('Ocorreu um erro ao carregar os dados:', error);
-                displayError('Não foi possível carregar os dados. Verifique se o formato da página da BrandMeister não foi alterado.');
-            });
+        // Atualizar os dados a cada 30 segundos (30000 milissegundos)
+        setInterval(fetchLastHeard, 30000);
     </script>
+
 </body>
 </html>
