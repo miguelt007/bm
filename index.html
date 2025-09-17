@@ -47,7 +47,6 @@
     </div>
 
     <script>
-        // O URL do seu proxy no Vercel, que irá buscar a página da BrandMeister
         const apiUrl = 'https://bm-psi.vercel.app/api/proxy?page=lh&DestinationID=268';
         const dataContainer = document.getElementById('brandmeister-data');
 
@@ -60,27 +59,28 @@
                 if (!response.ok) {
                     throw new Error(`Falha no pedido: ${response.status} ${response.statusText}`);
                 }
-                // Busca o conteúdo como texto (HTML), não como JSON
                 return response.text();
             })
             .then(htmlString => {
-                // Limpa a mensagem de carregamento
                 dataContainer.innerHTML = '';
-
-                // Usa o DOMParser para analisar o texto HTML
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(htmlString, 'text/html');
 
-                // Encontra a tabela com a informação (a classe é "table table-condensed")
-                const table = doc.querySelector('table.table-condensed');
-                if (!table) {
-                    throw new Error("Não foi possível encontrar a tabela de dados na página da BrandMeister.");
+                // A Nova Lógica de Verificação
+                let dataTable = null;
+                const tables = doc.querySelectorAll('table');
+                
+                tables.forEach(table => {
+                    if (table.classList.contains('table-condensed')) {
+                        dataTable = table;
+                    }
+                });
+
+                if (!dataTable) {
+                    throw new Error("Não foi possível encontrar a tabela de dados na página da BrandMeister. Verifique o código fonte para a classe correta.");
                 }
 
-                // Encontra todas as linhas de dados na tabela (todas as <tr>)
-                const rows = table.querySelectorAll('tbody tr');
-                
-                // Cria uma lista para mostrar os resultados
+                const rows = dataTable.querySelectorAll('tbody tr');
                 const ul = document.createElement('ul');
 
                 rows.forEach(row => {
@@ -88,7 +88,6 @@
                     if (cols.length > 5) {
                         const li = document.createElement('li');
                         
-                        // Extrai o texto de cada coluna (célula da tabela)
                         const callsign = cols[2].textContent.trim();
                         const duration = cols[5].textContent.trim();
                         const timestamp = cols[0].textContent.trim();
