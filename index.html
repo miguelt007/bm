@@ -93,8 +93,9 @@
         };
         const stateClassMap = {
             'Idle': 'bg-warning text-dark',
-            'In Progress': 'bg-success',
-            'Lost': 'bg-danger'
+            'In Progress': 'bg-success text-white',
+            'Lost': 'bg-danger text-white',
+            'Ended': 'bg-light text-dark'
         };
 
         // Mapeamento de números para tipos de chamada de texto
@@ -175,7 +176,7 @@
                     <td>${callTypeValue}</td>
                     <td>${item[9] || ''}</td>
                     <td>${item[10] || ''}</td>
-                    <td><span class="badge ${stateClass} text-white">${stateValue}</span></td>
+                    <td><span class="badge ${stateClass}">${stateValue}</span></td>
                     <td>${formattedDuration}</td>
                     <td class="${rssiClass}">${rssiValue}</td>
                     <td>${lossRateValue}</td>
@@ -262,7 +263,7 @@
                     bValue = String(bValue || '');
                 }
 
-                if (aValue < bValue) {
+                if (aValue < b-Value) {
                     return direction === 'asc' ? -1 : 1;
                 }
                 if (aValue > bValue) {
