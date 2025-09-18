@@ -115,6 +115,15 @@
             border-radius: 5px;
             font-weight: bold;
         }
+        /* Classes de estilo para a coluna "Repeater Call" */
+        .repeater-green {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .repeater-blue {
+            color: #007bff;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -230,8 +239,17 @@
                     stateClass = 'badge-warning';
                 }
 
-                // Mapeia o valor numérico do tipo de chamada para a string correspondente
                 const callTypeValue = callTypeMap[item[8]] || 'N/A';
+
+                // Lógica para definir a classe de cor da coluna "Repeater Call"
+                const repeaterCallValue = item[20] || '';
+                let repeaterClass = ''; // Inicia sem classe de cor
+
+                if (repeaterCallValue.toUpperCase().startsWith('CQO')) {
+                    repeaterClass = 'repeater-green';
+                } else if (repeaterCallValue.toUpperCase().startsWith('XLX') || repeaterCallValue.toUpperCase().startsWith('CU')) {
+                    repeaterClass = 'repeater-blue';
+                }
 
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -246,7 +264,7 @@
                     <td>${formattedDuration}</td>
                     <td>${item[15] || ''}</td>
                     <td>${lossRateValue}</td>
-                    <td>${item[20] || ''}</td>
+                    <td><span class="${repeaterClass}">${repeaterCallValue}</span></td>
                     <td>${item[21] || ''}</td>
                     <td>${item[22] || ''}</td>
                     <td>${item[23] || ''}</td>
