@@ -201,6 +201,13 @@
                 const rssiClass = getSignalClass(rssiValue);
                 const sunitValue = getSunitFromRssi(rssiValue);
 
+                let rssiContent = '';
+                if (typeof rssiValue === 'number') {
+                    rssiContent = `<span class="${rssiClass}">${sunitValue}</span><br><span class="${rssiClass}">${rssiValue.toFixed(2)} dBm</span>`;
+                } else {
+                    rssiContent = `<span class="text-secondary">N/A</span>`;
+                }
+
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${item[2] ? new Date(item[2] * 1000).toLocaleString() : ''}</td>
@@ -212,10 +219,7 @@
                     <td>${item[10] || ''}</td>
                     <td><span class="badge ${stateClass}">${stateValue}</span></td>
                     <td>${formattedDuration}</td>
-                    <td>
-                        <span class="${rssiClass}">${sunitValue}</span><br>
-                        <span class="${rssiClass}">${typeof rssiValue === 'number' ? rssiValue.toFixed(2) : rssiValue} dBm</span>
-                    </td>
+                    <td>${rssiContent}</td>
                     <td>${lossRateValue}</td>
                     <td><span class="${repeaterClass}">${repeaterCallValue}</span></td>
                     <td>${item[21] || ''}</td>
@@ -257,9 +261,22 @@
                 tgFilter.appendChild(option);
             });
 
-            // CORREÇÃO: Assegura que a opção "Todos" é selecionada por defeito
-            callsignFilter.value = '';
-            tgFilter.value = '';
+            // LÓGICA CORRIGIDA PARA O FILTRO: verifica se o valor guardado existe na nova lista
+            const savedCallsign = localStorage.getItem('selectedCallsign');
+            if (savedCallsign && sortedCallsigns.includes(savedCallsign)) {
+                callsignFilter.value = savedCallsign;
+            } else {
+                callsignFilter.value = '';
+                localStorage.removeItem('selectedCallsign');
+            }
+
+            const savedTg = localStorage.getItem('selectedTg');
+            if (savedTg && sortedTGs.includes(parseInt(savedTg))) {
+                tgFilter.value = savedTg;
+            } else {
+                tgFilter.value = '';
+                localStorage.removeItem('selectedTg');
+            }
         }
 
         function applyFiltersAndRender() {
@@ -359,17 +376,6 @@
                 allData = data;
                 
                 populateFilters(allData);
-
-                const savedCallsign = localStorage.getItem('selectedCallsign');
-                const savedTg = localStorage.getItem('selectedTg');
-
-                if (savedCallsign) {
-                    callsignFilter.value = savedCallsign;
-                }
-                if (savedTg) {
-                    tgFilter.value = savedTg;
-                }
-
                 applyFiltersAndRender();
 
             } catch (error) {
