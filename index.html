@@ -197,7 +197,7 @@
                 }
                 
                 // Obter a classe de cor para o RSSI
-                const rssiValue = item[15] || '';
+                const rssiValue = item[15] || 0; // Se não houver valor, assume 0
                 const rssiClass = getSignalClass(rssiValue);
                 const sunitValue = getSunitFromRssi(rssiValue);
 
