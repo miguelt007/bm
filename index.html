@@ -4,167 +4,78 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BrandMeister - Last Heard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
             background-color: #f4f4f4;
             color: #333;
         }
-        h1 {
-            color: #0056b3;
-            text-align: center;
-        }
-        .filters {
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        .filters label {
-            margin-right: 10px;
-            font-weight: bold;
-        }
-        .filters select, .filters button {
-            padding: 8px;
-            font-size: 1em;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            margin: 5px;
-            cursor: pointer;
-        }
-        .table-container {
-            overflow-x: auto;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            background-color: #fff;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        th, td {
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            text-align: left;
-        }
-        th {
-            background-color: #0056b3;
-            color: #fff;
-            cursor: pointer;
-            white-space: nowrap;
-        }
+        /* Estilos personalizados para os ícones de ordenação */
         th.sorted-asc::after {
             content: ' ▲';
         }
         th.sorted-desc::after {
             content: ' ▼';
         }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        tr:hover {
-            background-color: #f1f1f1;
-        }
-        .loading {
-            text-align: center;
-            padding: 20px;
-            font-size: 1.2em;
-            color: #555;
-        }
-
-        /* Estilos para ecrãs pequenos (telemóveis) */
-        @media (max-width: 600px) {
-            body {
-                margin: 10px;
-            }
-            .filters {
-                text-align: left;
-            }
-            .filters select, .filters button {
-                width: 100%;
-                box-sizing: border-box;
-                display: block;
-                margin-bottom: 10px;
-            }
-            th, td {
-                font-size: 0.8em;
-                padding: 8px 10px;
-                white-space: nowrap;
-            }
-        }
-        /* Classe de estilo para o estado 'In Progress' (verde) */
-        .badge-success {
-            background-color: #28a745;
-            color: #fff;
-            padding: 5px 8px;
-            border-radius: 5px;
-            font-weight: bold;
-        }
-        /* Classe de estilo para o estado 'Lost' (vermelho) */
-        .badge-danger {
-            background-color: #dc3545;
-            color: #fff;
-            padding: 5px 8px;
-            border-radius: 5px;
-            font-weight: bold;
-        }
-        /* Classe de estilo para o estado 'Idle' (amarelo) */
-        .badge-warning {
-            background-color: #ffc107;
-            color: #212529;
-            padding: 5px 8px;
-            border-radius: 5px;
-            font-weight: bold;
+        /* CORREÇÃO PARA QUE O TEXTO DO CABEÇALHO QUEBRE AS LINHAS */
+        thead th {
+            white-space: normal;
         }
     </style>
 </head>
 <body>
 
-    <h1>BrandMeister - Last Heard</h1>
+    <div class="container my-4">
+        <h1 class="text-center text-primary mb-4">BrandMeister - Last Heard</h1>
     
-    <div class="filters">
-        <label for="callsign-filter">Filtrar por Indicativo:</label>
-        <select id="callsign-filter">
-            <option value="">Todos</option>
-        </select>
-        
-        <label for="tg-filter">Filtrar por TG:</label>
-        <select id="tg-filter">
-            <option value="">Todos</option>
-        </select>
-        <button id="clear-filters">Limpar Filtros</button>
+        <div class="filters text-center mb-4">
+            <label for="callsign-filter" class="fw-bold me-2">Filtrar por Indicativo:</label>
+            <select id="callsign-filter" class="form-select-sm d-inline-block w-auto me-3">
+                <option value="">Todos</option>
+            </select>
+            
+            <label for="tg-filter" class="fw-bold me-2">Filtrar por TG:</label>
+            <select id="tg-filter" class="form-select-sm d-inline-block w-auto me-3">
+                <option value="">Todos</option>
+            </select>
+            <button id="clear-filters" class="btn btn-secondary btn-sm">Limpar Filtros</button>
+        </div>
+    
+        <div id="loading" class="text-center my-5 fs-5">
+            A carregar dados...
+        </div>
+    
+        <div class="table-responsive">
+            <table id="heardTable" class="table table-striped table-hover table-sm" style="display: none;">
+                <thead>
+                    <tr>
+                        <th data-column-index="2" data-type="date" class="bg-primary text-white fw-bold">Data</th>
+                        <th data-column-index="4" data-type="string" class="bg-primary text-white fw-bold">Link Name</th>
+                        <th data-column-index="6" data-type="number" class="bg-primary text-white fw-bold">Link ID</th>
+                        <th data-column-index="7" data-type="number" class="bg-primary text-white fw-bold">Slot</th>
+                        <th data-column-index="8" data-type="string" class="bg-primary text-white fw-bold">Call Type</th>
+                        <th data-column-index="9" data-type="string" class="bg-primary text-white fw-bold">Source ID</th>
+                        <th data-column-index="10" data-type="number" class="bg-primary text-white fw-bold">To TG</th>
+                        <th data-column-index="13" data-type="string" class="bg-primary text-white fw-bold">State</th>
+                        <th data-column-index="14" data-type="number" class="bg-primary text-white fw-bold">Duration</th>
+                        <th data-column-index="15" data-type="number" class="bg-primary text-white fw-bold">RSSI</th>
+                        <th data-column-index="17" data-type="number" class="bg-primary text-white fw-bold">Loss Rate</th>
+                        <th data-column-index="20" data-type="string" class="bg-primary text-white fw-bold">Repeater Call</th>
+                        <th data-column-index="21" data-type="string" class="bg-primary text-white fw-bold">Source Call</th>
+                        <th data-column-index="22" data-type="string" class="bg-primary text-white fw-bold">Source Name</th>
+                        <th data-column-index="23" data-type="string" class="bg-primary text-white fw-bold">Destination Call</th>
+                        <th data-column-index="24" data-type="string" class="bg-primary text-white fw-bold">Destination Name</th>
+                        <th data-column-index="25" data-type="string" class="bg-primary text-white fw-bold">Talker Alias</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </div>
     </div>
 
-    <div id="loading" class="loading">
-        A carregar dados...
-    </div>
-
-    <div class="table-container">
-        <table id="heardTable" style="display: none;">
-            <thead>
-                <tr>
-                    <th data-column-index="2" data-type="date">Data</th>
-                    <th data-column-index="4" data-type="string">Link Name</th>
-                    <th data-column-index="6" data-type="number">Link ID</th>
-                    <th data-column-index="7" data-type="number">Slot</th>
-                    <th data-column-index="8" data-type="string">Call Type</th>
-                    <th data-column-index="9" data-type="string">Source ID</th>
-                    <th data-column-index="10" data-type="number">To TG</th>
-                    <th data-column-index="13" data-type="string">State</th>
-                    <th data-column-index="14" data-type="number">Duration</th>
-                    <th data-column-index="15" data-type="number">RSSI</th>
-                    <th data-column-index="17" data-type="number">Loss Rate</th>
-                    <th data-column-index="20" data-type="string">Repeater Call</th>
-                    <th data-column-index="21" data-type="string">Source Call</th>
-                    <th data-column-index="22" data-type="string">Source Name</th>
-                    <th data-column-index="23" data-type="string">Destination Call</th>
-                    <th data-column-index="24" data-type="string">Destination Name</th>
-                    <th data-column-index="25" data-type="string">Talker Alias</th>
-                </tr>
-            </thead>
-            <tbody>
-                </tbody>
-        </table>
-    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
     <script>
         const API_URL = 'https://bm-psi.vercel.app/api/last-heard';
@@ -172,13 +83,18 @@
         let currentSortColumn = null;
         let currentSortDirection = 'asc';
 
-        // Mapeamento de números para estados de texto
+        // Mapeamento de números para estados de texto e classes Bootstrap
         const stateMap = {
             0: 'Idle',
             1: 'In Progress',
             2: 'Ended',
             3: 'Pre',
             4: 'Lost'
+        };
+        const stateClassMap = {
+            'Idle': 'bg-warning text-dark',
+            'In Progress': 'bg-success',
+            'Lost': 'bg-danger'
         };
 
         // Mapeamento de números para tipos de chamada de texto
@@ -211,6 +127,18 @@
             const formattedSeconds = String(remainingSeconds).padStart(2, '0');
             return `${formattedMinutes}:${formattedSeconds}`;
         }
+
+        // NOVA FUNÇÃO: Determina a classe de cor do sinal com base no valor RSSI
+        function getSignalClass(rssi) {
+            if (rssi > -80) {
+                return 'text-success'; // Sinal excelente (verde)
+            } else if (rssi > -95) {
+                return 'text-warning'; // Sinal bom/aceitável (amarelo)
+            } else if (rssi > -110) {
+                return 'text-danger'; // Sinal fraco (vermelho)
+            }
+            return 'text-secondary'; // Sinal muito fraco ou sem dados (cinzento)
+        }
         
         function renderTable(dataToRender) {
             tableBody.innerHTML = '';
@@ -220,18 +148,23 @@
                 const formattedDuration = formatDuration(durationSeconds);
                 
                 const stateValue = stateMap[item[13]] || '';
-                
-                let stateClass = '';
-                if (stateValue === 'In Progress') {
-                    stateClass = 'badge-success';
-                } else if (stateValue === 'Lost') {
-                    stateClass = 'badge-danger';
-                } else if (stateValue === 'Idle') {
-                    stateClass = 'badge-warning';
-                }
+                const stateClass = stateClassMap[stateValue] || '';
 
-                // Mapeia o valor numérico do tipo de chamada para a string correspondente
                 const callTypeValue = callTypeMap[item[8]] || 'N/A';
+
+                const repeaterCallValue = item[20] || '';
+                let repeaterClass = '';
+
+                // Lógica de cores para o Repeater Call
+                if (repeaterCallValue.toUpperCase().startsWith('CQO')) {
+                    repeaterClass = 'text-success';
+                } else if (repeaterCallValue.toUpperCase().startsWith('XLX') || repeaterCallValue.toUpperCase().startsWith('CS') || repeaterCallValue.toUpperCase().startsWith('REFLECTOR')) {
+                    repeaterClass = 'text-primary';
+                }
+                
+                // Obter a classe de cor para o RSSI
+                const rssiValue = item[15] || '';
+                const rssiClass = getSignalClass(rssiValue);
 
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -242,11 +175,11 @@
                     <td>${callTypeValue}</td>
                     <td>${item[9] || ''}</td>
                     <td>${item[10] || ''}</td>
-                    <td><span class="${stateClass}">${stateValue}</span></td>
+                    <td><span class="badge ${stateClass} text-white">${stateValue}</span></td>
                     <td>${formattedDuration}</td>
-                    <td>${item[15] || ''}</td>
+                    <td class="${rssiClass}">${rssiValue}</td>
                     <td>${lossRateValue}</td>
-                    <td>${item[20] || ''}</td>
+                    <td><span class="${repeaterClass}">${repeaterCallValue}</span></td>
                     <td>${item[21] || ''}</td>
                     <td>${item[22] || ''}</td>
                     <td>${item[23] || ''}</td>
@@ -406,6 +339,5 @@
         fetchData();
         setInterval(fetchData, 30000);
     </script>
-
 </body>
 </html>
