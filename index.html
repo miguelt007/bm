@@ -181,6 +181,19 @@
             4: 'Lost'
         };
 
+        // Mapeamento de números para tipos de chamada de texto
+        const callTypeMap = {
+            7: 'Group Voice',
+            0: 'Private',
+            1: 'Group',
+            2: 'All',
+            3: 'Data',
+            4: 'Emergency',
+            5: 'Unconfirmed Private',
+            6: 'Unconfirmed Group',
+            'N/A': 'N/A' // Valor padrão
+        };
+
         const callsignFilter = document.getElementById('callsign-filter');
         const tgFilter = document.getElementById('tg-filter');
         const clearFiltersBtn = document.getElementById('clear-filters');
@@ -218,7 +231,9 @@
                     stateClass = 'badge-warning';
                 }
 
-                const callTypeValue = item[8] || ''; // Alterado para mostrar o número diretamente
+                // Mapeia o valor numérico do tipo de chamada para a string correspondente
+                // Se o valor for nulo, mostra 'N/A'
+                const callTypeValue = callTypeMap[item[8]] || 'N/A';
 
                 const row = document.createElement('tr');
                 row.innerHTML = `
