@@ -183,7 +183,6 @@
 
         // Mapeamento de números para tipos de chamada de texto
         const callTypeMap = {
-            7: 'Group Voice',
             0: 'Private',
             1: 'Group',
             2: 'All',
@@ -191,7 +190,7 @@
             4: 'Emergency',
             5: 'Unconfirmed Private',
             6: 'Unconfirmed Group',
-            'N/A': 'N/A' // Valor padrão
+            7: 'Group Voice'
         };
 
         const callsignFilter = document.getElementById('callsign-filter');
@@ -232,7 +231,6 @@
                 }
 
                 // Mapeia o valor numérico do tipo de chamada para a string correspondente
-                // Se o valor for nulo, mostra 'N/A'
                 const callTypeValue = callTypeMap[item[8]] || 'N/A';
 
                 const row = document.createElement('tr');
