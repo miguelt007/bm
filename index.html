@@ -119,7 +119,8 @@
         const tableHeaders = document.querySelectorAll('#heardTable thead th');
 
         function formatDuration(seconds) {
-            if (isNaN(seconds) || seconds < 0) {
+            // VERIFICA SE O VALOR É VÁLIDO ANTES DE FORMATAR
+            if (typeof seconds !== 'number' || seconds < 0 || isNaN(seconds)) {
                 return '';
             }
             const minutes = Math.floor(seconds / 60);
@@ -177,7 +178,8 @@
                     <td>${item[9] || ''}</td>
                     <td>${item[10] || ''}</td>
                     <td><span class="badge ${stateClass}">${stateValue}</span></td>
-                    <td class="${rssiClass}">${typeof rssiValue === 'number' ? rssiValue.toFixed(2) : rssiValue}</td>
+                    <td>${formattedDuration}</td>
+                    <td><span class="${rssiClass}">${typeof rssiValue === 'number' ? rssiValue.toFixed(2) : rssiValue}</span></td>
                     <td>${lossRateValue}</td>
                     <td><span class="${repeaterClass}">${repeaterCallValue}</span></td>
                     <td>${item[21] || ''}</td>
