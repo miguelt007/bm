@@ -91,10 +91,26 @@
                 white-space: nowrap;
             }
         }
-        /* Classe de estilo para o estado 'In Progress' */
+        /* Classe de estilo para o estado 'In Progress' (verde) */
         .badge-success {
             background-color: #28a745;
             color: #fff;
+            padding: 5px 8px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        /* Classe de estilo para o estado 'Lost' (vermelho) */
+        .badge-danger {
+            background-color: #dc3545;
+            color: #fff;
+            padding: 5px 8px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        /* Classe de estilo para o estado 'Idle' (amarelo) */
+        .badge-warning {
+            background-color: #ffc107;
+            color: #212529;
             padding: 5px 8px;
             border-radius: 5px;
             font-weight: bold;
@@ -161,7 +177,8 @@
             0: 'Idle',
             1: 'In Progress',
             2: 'Ended',
-            3: 'Pre'
+            3: 'Pre',
+            4: 'Lost'
         };
 
         const callsignFilter = document.getElementById('callsign-filter');
@@ -192,8 +209,15 @@
                 
                 const stateValue = stateMap[item[13]] || '';
                 
-                // Adiciona a classe CSS se o estado for 'In Progress'
-                const stateClass = stateValue === 'In Progress' ? 'badge-success' : '';
+                // Adiciona a classe CSS baseada no estado
+                let stateClass = '';
+                if (stateValue === 'In Progress') {
+                    stateClass = 'badge-success';
+                } else if (stateValue === 'Lost') {
+                    stateClass = 'badge-danger';
+                } else if (stateValue === 'Idle') {
+                    stateClass = 'badge-warning';
+                }
 
                 const row = document.createElement('tr');
                 row.innerHTML = `
