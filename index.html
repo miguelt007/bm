@@ -177,8 +177,7 @@
                     <td>${item[9] || ''}</td>
                     <td>${item[10] || ''}</td>
                     <td><span class="badge ${stateClass}">${stateValue}</span></td>
-                    <td>${formattedDuration}</td>
-                    <td class="${rssiClass}">${rssiValue}</td>
+                    <td class="${rssiClass}">${typeof rssiValue === 'number' ? rssiValue.toFixed(2) : rssiValue}</td>
                     <td>${lossRateValue}</td>
                     <td><span class="${repeaterClass}">${repeaterCallValue}</span></td>
                     <td>${item[21] || ''}</td>
