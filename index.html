@@ -128,7 +128,7 @@
             return `${formattedMinutes}:${formattedSeconds}`;
         }
 
-        // NOVA FUNÇÃO: Determina a classe de cor do sinal com base no valor RSSI
+        // Determina a classe de cor do sinal com base no valor RSSI
         function getSignalClass(rssi) {
             if (rssi > -80) {
                 return 'text-success'; // Sinal excelente (verde)
@@ -218,6 +218,10 @@
                 option.textContent = tg;
                 tgFilter.appendChild(option);
             });
+
+            // CORREÇÃO: Assegura que a opção "Todos" é selecionada por defeito
+            callsignFilter.value = '';
+            tgFilter.value = '';
         }
 
         function applyFiltersAndRender() {
