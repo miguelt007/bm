@@ -186,10 +186,8 @@
                 const repeaterCallValue = item[20] || '';
                 let repeaterClass = '';
 
-                if (repeaterCallValue.toUpperCase().startsWith('CQO')) {
+                if (repeaterCallValue.trim().toUpperCase().startsWith('CQO')) {
                     repeaterClass = 'text-success';
-                } else if (repeaterCallValue.toUpperCase().startsWith('XLX') || repeaterCallValue.toUpperCase().startsWith('CS') || repeaterCallValue.toUpperCase().startsWith('REFLECTOR')) {
-                    repeaterClass = 'text-primary';
                 }
                 
                 const rssiValue = item[15];
