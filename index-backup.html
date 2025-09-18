@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BrandMeister - Last Heard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1 {
+            color: #0056b3;
+            text-align: center;
+        }
+        .filters {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .filters label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .filters select, .filters button {
+            padding: 8px;
+            font-size: 1em;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #0056b3;
+            color: #fff;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        th.sorted-asc::after {
+            content: ' ▲';
+        }
+        th.sorted-desc::after {
+            content: ' ▼';
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2em;
+            color: #555;
+        }
+
+        /* Estilos para ecrãs pequenos (telemóveis) */
+        @media (max-width: 600px) {
+            body {
+                margin: 10px;
+            }
+            .filters {
+                text-align: left;
+            }
+            .filters select, .filters button {
+                width: 100%;
+                box-sizing: border-box;
+                display: block;
+                margin-bottom: 10px;
+            }
+            th, td {
+                font-size: 0.8em;
+                padding: 8px 10px;
+                white-space: nowrap;
+            }
+        }
+        /* Classe de estilo para o estado 'In Progress' (verde) */
+        .badge-success {
+            background-color: #28a745;
+            color: #fff;
+            padding: 5px 8px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        /* Classe de estilo para o estado 'Lost' (vermelho) */
+        .badge-danger {
+            background-color: #dc3545;
+            color: #fff;
+            padding: 5px 8px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        /* Classe de estilo para o estado 'Idle' (amarelo) */
+        .badge-warning {
+            background-color: #ffc107;
+            color: #212529;
+            padding: 5px 8px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>BrandMeister - Last Heard</h1>
+    
+    <div class="filters">
+        <label for="callsign-filter">Filtrar por Indicativo:</label>
+        <select id="callsign-filter">
+            <option value="">Todos</option>
+        </select>
+        
+        <label for="tg-filter">Filtrar por TG:</label>
+        <select id="tg-filter">
+            <option value="">Todos</option>
+        </select>
+        <button id="clear-filters">Limpar Filtros</button>
+    </div>
+
+    <div id="loading" class="loading">
+        A carregar dados...
+    </div>
+
+    <div class="table-container">
+        <table id="heardTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th data-column-index="2" data-type="date">Data</th>
+                    <th data-column-index="4" data-type="string">Link Name</th>
+                    <th data-column-index="6" data-type="number">Link ID</th>
+                    <th data-column-index="7" data-type="number">Slot</th>
+                    <th data-column-index="8" data-type="string">Call Type</th>
+                    <th data-column-index="9" data-type="string">Source ID</th>
+                    <th data-column-index="10" data-type="number">To TG</th>
+                    <th data-column-index="13" data-type="string">State</th>
+                    <th data-column-index="14" data-type="number">Duration</th>
+                    <th data-column-index="15" data-type="number">RSSI</th>
+                    <th data-column-index="17" data-type="number">Loss Rate</th>
+                    <th data-column-index="20" data-type="string">Repeater Call</th>
+                    <th data-column-index="21" data-type="string">Source Call</th>
+                    <th data-column-index="22" data-type="string">Source Name</th>
+                    <th data-column-index="23" data-type="string">Destination Call</th>
+                    <th data-column-index="24" data-type="string">Destination Name</th>
+                    <th data-column-index="25" data-type="string">Talker Alias</th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+    </div>
+
+    <script>
+        const API_URL = 'https://bm-psi.vercel.app/api/last-heard';
+        let allData = [];
+        let currentSortColumn = null;
+        let currentSortDirection = 'asc';
+
+        // Mapeamento de números para estados de texto
+        const stateMap = {
+            0: 'Idle',
+            1: 'In Progress',
+            2: 'Ended',
+            3: 'Pre',
+            4: 'Lost'
+        };
+
+        // Mapeamento de números para tipos de chamada de texto
+        const callTypeMap = {
+            0: 'Private',
+            1: 'Group',
+            2: 'All',
+            3: 'Data',
+            4: 'Emergency',
+            5: 'Unconfirmed Private',
+            6: 'Unconfirmed Group',
+            7: 'Group Voice'
+        };
+
+        const callsignFilter = document.getElementById('callsign-filter');
+        const tgFilter = document.getElementById('tg-filter');
+        const clearFiltersBtn = document.getElementById('clear-filters');
+        const tableBody = document.querySelector('#heardTable tbody');
+        const loadingMessage = document.getElementById('loading');
+        const table = document.getElementById('heardTable');
+        const tableHeaders = document.querySelectorAll('#heardTable thead th');
+
+        function formatDuration(seconds) {
+            if (isNaN(seconds) || seconds < 0) {
+                return '';
+            }
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = Math.floor(seconds % 60);
+            const formattedMinutes = String(minutes).padStart(2, '0');
+            const formattedSeconds = String(remainingSeconds).padStart(2, '0');
+            return `${formattedMinutes}:${formattedSeconds}`;
+        }
+        
+        function renderTable(dataToRender) {
+            tableBody.innerHTML = '';
+            dataToRender.forEach(item => {
+                const lossRateValue = (item[17] || item[17] === 0) ? `${item[17]}%` : '0%';
+                const durationSeconds = item[14] * 0.06;
+                const formattedDuration = formatDuration(durationSeconds);
+                
+                const stateValue = stateMap[item[13]] || '';
+                
+                let stateClass = '';
+                if (stateValue === 'In Progress') {
+                    stateClass = 'badge-success';
+                } else if (stateValue === 'Lost') {
+                    stateClass = 'badge-danger';
+                } else if (stateValue === 'Idle') {
+                    stateClass = 'badge-warning';
+                }
+
+                // Mapeia o valor numérico do tipo de chamada para a string correspondente
+                const callTypeValue = callTypeMap[item[8]] || 'N/A';
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item[2] ? new Date(item[2] * 1000).toLocaleString() : ''}</td>
+                    <td>${item[4] || ''}</td>
+                    <td>${item[6] || ''}</td>
+                    <td>${item[7] || ''}</td>
+                    <td>${callTypeValue}</td>
+                    <td>${item[9] || ''}</td>
+                    <td>${item[10] || ''}</td>
+                    <td><span class="${stateClass}">${stateValue}</span></td>
+                    <td>${formattedDuration}</td>
+                    <td>${item[15] || ''}</td>
+                    <td>${lossRateValue}</td>
+                    <td>${item[20] || ''}</td>
+                    <td>${item[21] || ''}</td>
+                    <td>${item[22] || ''}</td>
+                    <td>${item[23] || ''}</td>
+                    <td>${item[24] || ''}</td>
+                    <td>${item[25] || ''}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+            loadingMessage.style.display = 'none';
+            table.style.display = 'table';
+        }
+
+        function populateFilters(data) {
+            const callsigns = new Set();
+            const tgs = new Set();
+            
+            data.forEach(item => {
+                if (item[21]) callsigns.add(item[21]);
+                if (item[10]) tgs.add(item[10]);
+            });
+
+            const sortedCallsigns = Array.from(callsigns).sort();
+            callsignFilter.innerHTML = '<option value="">Todos</option>';
+            sortedCallsigns.forEach(callsign => {
+                const option = document.createElement('option');
+                option.value = callsign;
+                option.textContent = callsign;
+                callsignFilter.appendChild(option);
+            });
+
+            const sortedTGs = Array.from(tgs).sort((a, b) => a - b);
+            tgFilter.innerHTML = '<option value="">Todos</option>';
+            sortedTGs.forEach(tg => {
+                const option = document.createElement('option');
+                option.value = tg;
+                option.textContent = tg;
+                tgFilter.appendChild(option);
+            });
+        }
+
+        function applyFiltersAndRender() {
+            const selectedCallsign = callsignFilter.value;
+            const selectedTg = tgFilter.value;
+            
+            let filteredData = allData;
+            
+            if (selectedCallsign) {
+                filteredData = filteredData.filter(item => item[21] === selectedCallsign);
+            }
+            if (selectedTg) {
+                filteredData = filteredData.filter(item => item[10] === parseInt(selectedTg));
+            }
+            
+            if (currentSortColumn !== null) {
+                const columnIndex = parseInt(currentSortColumn.dataset.columnIndex);
+                const dataType = currentSortColumn.dataset.type;
+                sortData(filteredData, columnIndex, dataType, currentSortDirection);
+            }
+
+            renderTable(filteredData);
+        }
+
+        function sortData(data, columnIndex, dataType, direction) {
+            data.sort((a, b) => {
+                let aValue = a[columnIndex];
+                let bValue = b[columnIndex];
+                
+                if (dataType === 'number') {
+                    aValue = parseFloat(aValue || 0);
+                    bValue = parseFloat(bValue || 0);
+                } else if (dataType === 'date') {
+                    aValue = parseInt(aValue || 0);
+                    bValue = parseInt(bValue || 0);
+                } else {
+                    aValue = String(aValue || '');
+                    bValue = String(bValue || '');
+                }
+
+                if (aValue < bValue) {
+                    return direction === 'asc' ? -1 : 1;
+                }
+                if (aValue > bValue) {
+                    return direction === 'asc' ? 1 : -1;
+                }
+                return 0;
+            });
+        }
+
+        callsignFilter.addEventListener('change', () => {
+            localStorage.setItem('selectedCallsign', callsignFilter.value);
+            applyFiltersAndRender();
+        });
+        tgFilter.addEventListener('change', () => {
+            localStorage.setItem('selectedTg', tgFilter.value);
+            applyFiltersAndRender();
+        });
+        
+        clearFiltersBtn.addEventListener('click', () => {
+            callsignFilter.value = '';
+            tgFilter.value = '';
+            localStorage.removeItem('selectedCallsign');
+            localStorage.removeItem('selectedTg');
+            applyFiltersAndRender();
+        });
+
+        tableHeaders.forEach(header => {
+            header.addEventListener('click', () => {
+                const columnIndex = header.dataset.columnIndex;
+                const dataType = header.dataset.type;
+                
+                if (currentSortColumn === header) {
+                    currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+                } else {
+                    if (currentSortColumn) {
+                        currentSortColumn.classList.remove('sorted-asc', 'sorted-desc');
+                    }
+                    currentSortColumn = header;
+                    currentSortDirection = 'asc';
+                }
+
+                header.classList.remove('sorted-asc', 'sorted-desc');
+                header.classList.add(`sorted-${currentSortDirection}`);
+                
+                applyFiltersAndRender();
+            });
+        });
+
+        async function fetchData() {
+            loadingMessage.style.display = 'block';
+            table.style.display = 'none';
+
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                allData = data;
+                
+                populateFilters(allData);
+
+                const savedCallsign = localStorage.getItem('selectedCallsign');
+                const savedTg = localStorage.getItem('selectedTg');
+
+                if (savedCallsign) {
+                    callsignFilter.value = savedCallsign;
+                }
+                if (savedTg) {
+                    tgFilter.value = savedTg;
+                }
+
+                applyFiltersAndRender();
+
+            } catch (error) {
+                console.error('Erro ao obter dados:', error);
+                loadingMessage.innerText = 'Erro ao carregar os dados. Tente novamente mais tarde.';
+            }
+        }
+
+        fetchData();
+        setInterval(fetchData, 30000);
+    </script>
+
+</body>
+</html>
