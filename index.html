@@ -141,6 +141,38 @@
             }
             return 'text-secondary'; // Sinal muito fraco ou sem dados (cinzento)
         }
+
+        // NOVA FUNÇÃO: Converte o valor de RSSI para a escala S-meter
+        function getSunitFromRssi(rssi) {
+            if (typeof rssi !== 'number') {
+                return 'N/A';
+            }
+
+            if (rssi >= -73) {
+                const s9Plus = Math.floor(rssi + 73);
+                return `S9+${s9Plus}dB`;
+            } else if (rssi >= -79) {
+                return 'S9';
+            } else if (rssi >= -85) {
+                return 'S8';
+            } else if (rssi >= -91) {
+                return 'S7';
+            } else if (rssi >= -97) {
+                return 'S6';
+            } else if (rssi >= -103) {
+                return 'S5';
+            } else if (rssi >= -109) {
+                return 'S4';
+            } else if (rssi >= -115) {
+                return 'S3';
+            } else if (rssi >= -121) {
+                return 'S2';
+            } else if (rssi >= -127) {
+                return 'S1';
+            } else {
+                return 'S0';
+            }
+        }
         
         function renderTable(dataToRender) {
             tableBody.innerHTML = '';
@@ -167,6 +199,7 @@
                 // Obter a classe de cor para o RSSI
                 const rssiValue = item[15] || '';
                 const rssiClass = getSignalClass(rssiValue);
+                const sunitValue = getSunitFromRssi(rssiValue);
 
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -179,7 +212,10 @@
                     <td>${item[10] || ''}</td>
                     <td><span class="badge ${stateClass}">${stateValue}</span></td>
                     <td>${formattedDuration}</td>
-                    <td><span class="${rssiClass}">${typeof rssiValue === 'number' ? rssiValue.toFixed(2) : rssiValue}</span></td>
+                    <td>
+                        <span class="${rssiClass}">${sunitValue}</span><br>
+                        <span class="${rssiClass}">${typeof rssiValue === 'number' ? rssiValue.toFixed(2) : rssiValue} dBm</span>
+                    </td>
                     <td>${lossRateValue}</td>
                     <td><span class="${repeaterClass}">${repeaterCallValue}</span></td>
                     <td>${item[21] || ''}</td>
