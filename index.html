@@ -91,6 +91,14 @@
                 white-space: nowrap;
             }
         }
+        /* Classe de estilo para o estado 'In Progress' */
+        .badge-success {
+            background-color: #28a745;
+            color: #fff;
+            padding: 5px 8px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -182,8 +190,10 @@
                 const durationSeconds = item[14] * 0.06;
                 const formattedDuration = formatDuration(durationSeconds);
                 
-                // Mapeia o valor numérico do estado para a string correspondente
                 const stateValue = stateMap[item[13]] || '';
+                
+                // Adiciona a classe CSS se o estado for 'In Progress'
+                const stateClass = stateValue === 'In Progress' ? 'badge-success' : '';
 
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -194,7 +204,7 @@
                     <td>${item[8] || ''}</td>
                     <td>${item[9] || ''}</td>
                     <td>${item[10] || ''}</td>
-                    <td>${stateValue}</td>
+                    <td><span class="${stateClass}">${stateValue}</span></td>
                     <td>${formattedDuration}</td>
                     <td>${item[15] || ''}</td>
                     <td>${lossRateValue}</td>
