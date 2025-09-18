@@ -39,6 +39,12 @@
             <select id="tg-filter" class="form-select-sm d-inline-block w-auto me-3">
                 <option value="">Todos</option>
             </select>
+            
+            <label for="repeater-call-filter" class="fw-bold me-2">Filtrar por Repeater:</label>
+            <select id="repeater-call-filter" class="form-select-sm d-inline-block w-auto me-3">
+                <option value="">Todos</option>
+            </select>
+
             <button id="clear-filters" class="btn btn-secondary btn-sm">Limpar Filtros</button>
         </div>
     
@@ -112,6 +118,7 @@
 
         const callsignFilter = document.getElementById('callsign-filter');
         const tgFilter = document.getElementById('tg-filter');
+        const repeaterCallFilter = document.getElementById('repeater-call-filter');
         const clearFiltersBtn = document.getElementById('clear-filters');
         const tableBody = document.querySelector('#heardTable tbody');
         const loadingMessage = document.getElementById('loading');
@@ -186,7 +193,7 @@
                 const repeaterCallValue = item[20] || '';
                 let repeaterClass = '';
 
-                if (repeaterCallValue.trim().toUpperCase().includes('CQO')) {
+                if (repeaterCallValue.trim().toUpperCase().startsWith('CQO')) {
                     repeaterClass = 'text-success';
                 }
                 
@@ -229,10 +236,12 @@
         function populateFilters(data) {
             const callsigns = new Set();
             const tgs = new Set();
+            const repeaterCalls = new Set();
             
             data.forEach(item => {
                 if (item[21]) callsigns.add(item[21]);
                 if (item[10]) tgs.add(item[10]);
+                if (item[20]) repeaterCalls.add(item[20]);
             });
 
             const sortedCallsigns = Array.from(callsigns).sort();
@@ -253,6 +262,15 @@
                 tgFilter.appendChild(option);
             });
 
+            const sortedRepeaterCalls = Array.from(repeaterCalls).sort();
+            repeaterCallFilter.innerHTML = '<option value="">Todos</option>';
+            sortedRepeaterCalls.forEach(repeater => {
+                const option = document.createElement('option');
+                option.value = repeater;
+                option.textContent = repeater;
+                repeaterCallFilter.appendChild(option);
+            });
+
             const savedCallsign = localStorage.getItem('selectedCallsign');
             if (savedCallsign && sortedCallsigns.includes(savedCallsign)) {
                 callsignFilter.value = savedCallsign;
@@ -268,11 +286,20 @@
                 tgFilter.value = '';
                 localStorage.removeItem('selectedTg');
             }
+
+            const savedRepeaterCall = localStorage.getItem('selectedRepeaterCall');
+            if (savedRepeaterCall && sortedRepeaterCalls.includes(savedRepeaterCall)) {
+                repeaterCallFilter.value = savedRepeaterCall;
+            } else {
+                repeaterCallFilter.value = '';
+                localStorage.removeItem('selectedRepeaterCall');
+            }
         }
 
         function applyFiltersAndRender() {
             const selectedCallsign = callsignFilter.value;
             const selectedTg = tgFilter.value;
+            const selectedRepeaterCall = repeaterCallFilter.value;
             
             let filteredData = allData;
             
@@ -281,6 +308,9 @@
             }
             if (selectedTg) {
                 filteredData = filteredData.filter(item => item[10] === parseInt(selectedTg));
+            }
+            if (selectedRepeaterCall) {
+                filteredData = filteredData.filter(item => item[20] === selectedRepeaterCall);
             }
             
             if (currentSortColumn !== null) {
@@ -326,12 +356,18 @@
             localStorage.setItem('selectedTg', tgFilter.value);
             applyFiltersAndRender();
         });
+        repeaterCallFilter.addEventListener('change', () => {
+            localStorage.setItem('selectedRepeaterCall', repeaterCallFilter.value);
+            applyFiltersAndRender();
+        });
         
         clearFiltersBtn.addEventListener('click', () => {
             callsignFilter.value = '';
             tgFilter.value = '';
+            repeaterCallFilter.value = '';
             localStorage.removeItem('selectedCallsign');
             localStorage.removeItem('selectedTg');
+            localStorage.removeItem('selectedRepeaterCall');
             applyFiltersAndRender();
         });
 
