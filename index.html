@@ -18,13 +18,6 @@
         th.sorted-desc::after {
             content: ' ▼';
         }
-        /* Estilo para garantir que o conteúdo do modal apareça */
-        .modal {
-            background-color: rgba(0, 0, 0, 0.5); /* Fundo semi-transparente */
-        }
-        .modal-content {
-            color: #212529; /* Garante que o texto seja legível */
-        }
     </style>
 </head>
 <body>
@@ -51,25 +44,25 @@
     
         <div class="table-responsive">
             <table id="heardTable" class="table table-striped table-hover table-sm" style="display: none;">
-                <thead class="bg-primary text-white">
+                <thead class="bg-primary">
                     <tr>
-                        <th data-column-index="2" data-type="date" class="text-white">Data</th>
-                        <th data-column-index="4" data-type="string" class="text-white">Link Name</th>
-                        <th data-column-index="6" data-type="number" class="text-white">Link ID</th>
-                        <th data-column-index="7" data-type="number" class="text-white">Slot</th>
-                        <th data-column-index="8" data-type="string" class="text-white">Call Type</th>
-                        <th data-column-index="9" data-type="string" class="text-white">Source ID</th>
-                        <th data-column-index="10" data-type="number" class="text-white">To TG</th>
-                        <th data-column-index="13" data-type="string" class="text-white">State</th>
-                        <th data-column-index="14" data-type="number" class="text-white">Duration</th>
-                        <th data-column-index="15" data-type="number" class="text-white">RSSI</th>
-                        <th data-column-index="17" data-type="number" class="text-white">Loss Rate</th>
-                        <th data-column-index="20" data-type="string" class="text-white">Repeater Call</th>
-                        <th data-column-index="21" data-type="string" class="text-white">Source Call</th>
-                        <th data-column-index="22" data-type="string" class="text-white">Source Name</th>
-                        <th data-column-index="23" data-type="string" class="text-white">Destination Call</th>
-                        <th data-column-index="24" data-type="string" class="text-white">Destination Name</th>
-                        <th data-column-index="25" data-type="string" class="text-white">Talker Alias</th>
+                        <th data-column-index="2" data-type="date" class="text-white fw-bold">Data</th>
+                        <th data-column-index="4" data-type="string" class="text-white fw-bold">Link Name</th>
+                        <th data-column-index="6" data-type="number" class="text-white fw-bold">Link ID</th>
+                        <th data-column-index="7" data-type="number" class="text-white fw-bold">Slot</th>
+                        <th data-column-index="8" data-type="string" class="text-white fw-bold">Call Type</th>
+                        <th data-column-index="9" data-type="string" class="text-white fw-bold">Source ID</th>
+                        <th data-column-index="10" data-type="number" class="text-white fw-bold">To TG</th>
+                        <th data-column-index="13" data-type="string" class="text-white fw-bold">State</th>
+                        <th data-column-index="14" data-type="number" class="text-white fw-bold">Duration</th>
+                        <th data-column-index="15" data-type="number" class="text-white fw-bold">RSSI</th>
+                        <th data-column-index="17" data-type="number" class="text-white fw-bold">Loss Rate</th>
+                        <th data-column-index="20" data-type="string" class="text-white fw-bold">Repeater Call</th>
+                        <th data-column-index="21" data-type="string" class="text-white fw-bold">Source Call</th>
+                        <th data-column-index="22" data-type="string" class="text-white fw-bold">Source Name</th>
+                        <th data-column-index="23" data-type="string" class="text-white fw-bold">Destination Call</th>
+                        <th data-column-index="24" data-type="string" class="text-white fw-bold">Destination Name</th>
+                        <th data-column-index="25" data-type="string" class="text-white fw-bold">Talker Alias</th>
                     </tr>
                 </thead>
                 <tbody>
