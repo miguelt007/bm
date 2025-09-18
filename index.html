@@ -159,6 +159,9 @@
         function renderTable(dataToRender) {
             tableBody.innerHTML = '';
             dataToRender.forEach(item => {
+                // Formata o valor de Loss Rate, com 0% se não houver dados.
+                const lossRateValue = (item[17] || item[17] === 0) ? `${item[17]}%` : '0%';
+                
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${item[2] ? new Date(item[2] * 1000).toLocaleString() : ''}</td>
@@ -171,7 +174,7 @@
                     <td>${item[13] || ''}</td>
                     <td>${(item[14] * 0.06).toFixed(2) || ''}</td>
                     <td>${item[15] || ''}</td>
-                    <td>${item[17] || ''}</td>
+                    <td>${lossRateValue}</td>
                     <td>${item[20] || ''}</td>
                     <td>${item[21] || ''}</td>
                     <td>${item[22] || ''}</td>
