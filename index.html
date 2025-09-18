@@ -23,12 +23,13 @@
             margin-right: 10px;
             font-weight: bold;
         }
-        .filters select {
+        .filters select, .filters button {
             padding: 8px;
             font-size: 1em;
             border-radius: 5px;
             border: 1px solid #ccc;
             margin: 5px;
+            cursor: pointer;
         }
         .table-container {
             overflow-x: auto;
@@ -51,6 +52,12 @@
             cursor: pointer;
             white-space: nowrap;
         }
+        th.sorted-asc::after {
+            content: ' ▲';
+        }
+        th.sorted-desc::after {
+            content: ' ▼';
+        }
         tr:nth-child(even) {
             background-color: #f9f9f9;
         }
@@ -72,7 +79,7 @@
             .filters {
                 text-align: left;
             }
-            .filters select {
+            .filters select, .filters button {
                 width: 100%;
                 box-sizing: border-box;
                 display: block;
@@ -100,6 +107,7 @@
         <select id="tg-filter">
             <option value="">Todos</option>
         </select>
+        <button id="clear-filters">Limpar Filtros</button>
     </div>
 
     <div id="loading" class="loading">
@@ -110,15 +118,15 @@
         <table id="heardTable" style="display: none;">
             <thead>
                 <tr>
-                    <th>Hora</th>
-                    <th>Indicativo</th>
-                    <th>Nome</th>
-                    <th>Local</th>
-                    <th>TG</th>
-                    <th>Slot</th>
-                    <th>Servidor</th>
-                    <th>RSSI</th>
-                    <th>Loss</th>
+                    <th data-column-index="2" data-type="date">Hora</th>
+                    <th data-column-index="21" data-type="string">Indicativo</th>
+                    <th data-column-index="22" data-type="string">Nome</th>
+                    <th data-column-index="4" data-type="string">Local</th>
+                    <th data-column-index="10" data-type="number">TG</th>
+                    <th data-column-index="7" data-type="number">Slot</th>
+                    <th data-column-index="20" data-type="string">Servidor</th>
+                    <th data-column-index="15" data-type="number">RSSI</th>
+                    <th data-column-index="17" data-type="number">Loss</th>
                 </tr>
             </thead>
             <tbody>
@@ -129,13 +137,17 @@
     <script>
         const API_URL = 'https://bm-psi.vercel.app/api/last-heard';
         let allData = [];
-        
+        let currentSortColumn = null;
+        let currentSortDirection = 'asc';
+
         const callsignFilter = document.getElementById('callsign-filter');
         const tgFilter = document.getElementById('tg-filter');
+        const clearFiltersBtn = document.getElementById('clear-filters');
         const tableBody = document.querySelector('#heardTable tbody');
         const loadingMessage = document.getElementById('loading');
         const table = document.getElementById('heardTable');
-        
+        const tableHeaders = document.querySelectorAll('#heardTable thead th');
+
         function renderTable(dataToRender) {
             tableBody.innerHTML = '';
             dataToRender.forEach(item => {
@@ -167,7 +179,7 @@
             });
 
             const sortedCallsigns = Array.from(callsigns).sort();
-            callsignFilter.innerHTML = '<option value="">Todos</option>'; // Reinicia o filtro
+            callsignFilter.innerHTML = '<option value="">Todos</option>';
             sortedCallsigns.forEach(callsign => {
                 const option = document.createElement('option');
                 option.value = callsign;
@@ -176,7 +188,7 @@
             });
 
             const sortedTGs = Array.from(tgs).sort((a, b) => a - b);
-            tgFilter.innerHTML = '<option value="">Todos</option>'; // Reinicia o filtro
+            tgFilter.innerHTML = '<option value="">Todos</option>';
             sortedTGs.forEach(tg => {
                 const option = document.createElement('option');
                 option.value = tg;
@@ -184,14 +196,11 @@
                 tgFilter.appendChild(option);
             });
         }
-        
-        function applyFilters() {
-            // Guardar a seleção no localStorage
-            localStorage.setItem('selectedCallsign', callsignFilter.value);
-            localStorage.setItem('selectedTg', tgFilter.value);
 
+        function applyFiltersAndRender() {
             const selectedCallsign = callsignFilter.value;
             const selectedTg = tgFilter.value;
+            
             let filteredData = allData;
             
             if (selectedCallsign) {
@@ -200,36 +209,112 @@
             if (selectedTg) {
                 filteredData = filteredData.filter(item => item[10] === parseInt(selectedTg));
             }
+            
+            // Re-aplica a ordenação atual aos dados filtrados
+            if (currentSortColumn !== null) {
+                const columnIndex = parseInt(currentSortColumn.dataset.columnIndex);
+                const dataType = currentSortColumn.dataset.type;
+                sortData(filteredData, columnIndex, dataType, currentSortDirection);
+            }
 
             renderTable(filteredData);
         }
 
-        callsignFilter.addEventListener('change', applyFilters);
-        tgFilter.addEventListener('change', applyFilters);
+        function sortData(data, columnIndex, dataType, direction) {
+            data.sort((a, b) => {
+                let aValue = a[columnIndex];
+                let bValue = b[columnIndex];
+                
+                if (dataType === 'number') {
+                    aValue = parseFloat(aValue || 0);
+                    bValue = parseFloat(bValue || 0);
+                } else if (dataType === 'date') {
+                    aValue = parseInt(aValue || 0);
+                    bValue = parseInt(bValue || 0);
+                } else {
+                    aValue = String(aValue || '');
+                    bValue = String(bValue || '');
+                }
+
+                if (aValue < bValue) {
+                    return direction === 'asc' ? -1 : 1;
+                }
+                if (aValue > bValue) {
+                    return direction === 'asc' ? 1 : -1;
+                }
+                return 0;
+            });
+        }
+
+        // Eventos para os filtros
+        callsignFilter.addEventListener('change', () => {
+            localStorage.setItem('selectedCallsign', callsignFilter.value);
+            applyFiltersAndRender();
+        });
+        tgFilter.addEventListener('change', () => {
+            localStorage.setItem('selectedTg', tgFilter.value);
+            applyFiltersAndRender();
+        });
         
-        async function fetchAndRender() {
+        // Evento para limpar os filtros
+        clearFiltersBtn.addEventListener('click', () => {
+            callsignFilter.value = '';
+            tgFilter.value = '';
+            localStorage.removeItem('selectedCallsign');
+            localStorage.removeItem('selectedTg');
+            applyFiltersAndRender();
+        });
+
+        // Eventos para a ordenação da tabela
+        tableHeaders.forEach(header => {
+            header.addEventListener('click', () => {
+                const columnIndex = header.dataset.columnIndex;
+                const dataType = header.dataset.type;
+                
+                // Determina a nova direção de ordenação
+                if (currentSortColumn === header) {
+                    currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+                } else {
+                    if (currentSortColumn) {
+                        currentSortColumn.classList.remove('sorted-asc', 'sorted-desc');
+                    }
+                    currentSortColumn = header;
+                    currentSortDirection = 'asc';
+                }
+
+                // Adiciona a classe CSS para o ícone
+                header.classList.remove('sorted-asc', 'sorted-desc');
+                header.classList.add(`sorted-${currentSortDirection}`);
+                
+                // Re-ordena e re-renderiza a tabela
+                applyFiltersAndRender();
+            });
+        });
+
+        // Função principal para buscar dados da API
+        async function fetchData() {
             loadingMessage.style.display = 'block';
             table.style.display = 'none';
 
             try {
                 const response = await fetch(API_URL);
                 const data = await response.json();
-                allData = data; 
+                allData = data;
                 
                 populateFilters(allData);
 
-                // Carregar as seleções do localStorage
+                // Carregar as seleções do localStorage e aplicar os filtros
                 const savedCallsign = localStorage.getItem('selectedCallsign');
                 const savedTg = localStorage.getItem('selectedTg');
 
-                if (savedCallsign && savedCallsign !== 'null') {
+                if (savedCallsign) {
                     callsignFilter.value = savedCallsign;
                 }
-                if (savedTg && savedTg !== 'null') {
+                if (savedTg) {
                     tgFilter.value = savedTg;
                 }
 
-                applyFilters();
+                applyFiltersAndRender();
 
             } catch (error) {
                 console.error('Erro ao obter dados:', error);
@@ -237,8 +322,11 @@
             }
         }
 
-        fetchAndRender();
-        setInterval(fetchAndRender, 30000);
+        // Chamar a função principal quando a página carregar
+        fetchData();
+
+        // Atualizar os dados a cada 30 segundos
+        setInterval(fetchData, 30000);
     </script>
 
 </body>
