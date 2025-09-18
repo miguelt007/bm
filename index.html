@@ -148,6 +148,14 @@
         let currentSortColumn = null;
         let currentSortDirection = 'asc';
 
+        // Mapeamento de números para estados de texto
+        const stateMap = {
+            0: 'Idle',
+            1: 'In Progress',
+            2: 'Ended',
+            3: 'Pre'
+        };
+
         const callsignFilter = document.getElementById('callsign-filter');
         const tgFilter = document.getElementById('tg-filter');
         const clearFiltersBtn = document.getElementById('clear-filters');
@@ -174,6 +182,9 @@
                 const durationSeconds = item[14] * 0.06;
                 const formattedDuration = formatDuration(durationSeconds);
                 
+                // Mapeia o valor numérico do estado para a string correspondente
+                const stateValue = stateMap[item[13]] || '';
+
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${item[2] ? new Date(item[2] * 1000).toLocaleString() : ''}</td>
@@ -183,7 +194,7 @@
                     <td>${item[8] || ''}</td>
                     <td>${item[9] || ''}</td>
                     <td>${item[10] || ''}</td>
-                    <td>${item[13] || ''}</td>
+                    <td>${stateValue}</td>
                     <td>${formattedDuration}</td>
                     <td>${item[15] || ''}</td>
                     <td>${lossRateValue}</td>
