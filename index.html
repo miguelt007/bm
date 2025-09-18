@@ -142,7 +142,7 @@
             return 'text-secondary'; // Sinal muito fraco ou sem dados (cinzento)
         }
 
-        // NOVA FUNÇÃO: Converte o valor de RSSI para a escala S-meter
+        // Converte o valor de RSSI para a escala S-meter
         function getSunitFromRssi(rssi) {
             if (typeof rssi !== 'number') {
                 return 'N/A';
@@ -196,16 +196,15 @@
                     repeaterClass = 'text-primary';
                 }
                 
-                // Obter a classe de cor para o RSSI
-                const rssiValue = item[15] || 0; // Se não houver valor, assume 0
-                const rssiClass = getSignalClass(rssiValue);
-                const sunitValue = getSunitFromRssi(rssiValue);
-
+                // LÓGICA CORRIGIDA DO RSSI: Verifica se o valor é um número
+                const rssiValue = item[15];
                 let rssiContent = '';
                 if (typeof rssiValue === 'number') {
+                    const rssiClass = getSignalClass(rssiValue);
+                    const sunitValue = getSunitFromRssi(rssiValue);
                     rssiContent = `<span class="${rssiClass}">${sunitValue}</span><br><span class="${rssiClass}">${rssiValue.toFixed(2)} dBm</span>`;
                 } else {
-                    rssiContent = `<span class="text-secondary">N/A</span>`;
+                    rssiContent = `<span class="text-secondary">0.00 dBm</span>`;
                 }
 
                 const row = document.createElement('tr');
