@@ -83,13 +83,18 @@
         let currentSortColumn = null;
         let currentSortDirection = 'asc';
 
-        // Mapeamento de números para estados de texto
+        // Mapeamento de números para estados de texto e classes Bootstrap
         const stateMap = {
             0: 'Idle',
             1: 'In Progress',
             2: 'Ended',
             3: 'Pre',
             4: 'Lost'
+        };
+        const stateClassMap = {
+            'Idle': 'bg-warning text-dark',
+            'In Progress': 'bg-success',
+            'Lost': 'bg-danger'
         };
 
         // Mapeamento de números para tipos de chamada de texto
@@ -131,23 +136,14 @@
                 const formattedDuration = formatDuration(durationSeconds);
                 
                 const stateValue = stateMap[item[13]] || '';
-                
-                // Usar classes Bootstrap para o estado
-                let stateClass = '';
-                if (stateValue === 'In Progress') {
-                    stateClass = 'bg-success';
-                } else if (stateValue === 'Lost') {
-                    stateClass = 'bg-danger';
-                } else if (stateValue === 'Idle') {
-                    stateClass = 'bg-warning text-dark';
-                }
+                const stateClass = stateClassMap[stateValue] || '';
 
                 const callTypeValue = callTypeMap[item[8]] || 'N/A';
 
                 const repeaterCallValue = item[20] || '';
                 let repeaterClass = '';
 
-                // Lógica de cores para o Repeater Call
+                // Lógica de cores atualizada
                 if (repeaterCallValue.toUpperCase().startsWith('CQO')) {
                     repeaterClass = 'text-success';
                 } else if (repeaterCallValue.toUpperCase().startsWith('XLX') || repeaterCallValue.toUpperCase().startsWith('CS') || repeaterCallValue.toUpperCase().startsWith('REFLECTOR')) {
