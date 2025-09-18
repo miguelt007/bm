@@ -118,15 +118,23 @@
         <table id="heardTable" style="display: none;">
             <thead>
                 <tr>
-                    <th data-column-index="2" data-type="date">Hora</th>
-                    <th data-column-index="21" data-type="string">Indicativo</th>
-                    <th data-column-index="22" data-type="string">Nome</th>
-                    <th data-column-index="4" data-type="string">Local</th>
-                    <th data-column-index="10" data-type="number">TG</th>
+                    <th data-column-index="2" data-type="date">Data</th>
+                    <th data-column-index="4" data-type="string">Link Name</th>
+                    <th data-column-index="6" data-type="number">Link ID</th>
                     <th data-column-index="7" data-type="number">Slot</th>
-                    <th data-column-index="20" data-type="string">Servidor</th>
+                    <th data-column-index="8" data-type="string">Call Type</th>
+                    <th data-column-index="9" data-type="string">Source ID</th>
+                    <th data-column-index="10" data-type="number">To TG</th>
+                    <th data-column-index="13" data-type="string">State</th>
+                    <th data-column-index="14" data-type="number">Duration</th>
                     <th data-column-index="15" data-type="number">RSSI</th>
-                    <th data-column-index="17" data-type="number">Loss</th>
+                    <th data-column-index="17" data-type="number">Loss Rate</th>
+                    <th data-column-index="20" data-type="string">Repeater Call</th>
+                    <th data-column-index="21" data-type="string">Source Call</th>
+                    <th data-column-index="22" data-type="string">Source Name</th>
+                    <th data-column-index="23" data-type="string">Destination Call</th>
+                    <th data-column-index="24" data-type="string">Destination Name</th>
+                    <th data-column-index="25" data-type="string">Talker Alias</th>
                 </tr>
             </thead>
             <tbody>
@@ -154,14 +162,22 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${item[2] ? new Date(item[2] * 1000).toLocaleString() : ''}</td>
-                    <td>${item[21] || ''}</td>
-                    <td>${item[22] || ''}</td>
                     <td>${item[4] || ''}</td>
-                    <td>${item[10] || ''}</td>
+                    <td>${item[6] || ''}</td>
                     <td>${item[7] || ''}</td>
-                    <td>${item[20] || ''}</td>
+                    <td>${item[8] || ''}</td>
+                    <td>${item[9] || ''}</td>
+                    <td>${item[10] || ''}</td>
+                    <td>${item[13] || ''}</td>
+                    <td>${(item[14] * 0.06).toFixed(2) || ''}</td>
                     <td>${item[15] || ''}</td>
                     <td>${item[17] || ''}</td>
+                    <td>${item[20] || ''}</td>
+                    <td>${item[21] || ''}</td>
+                    <td>${item[22] || ''}</td>
+                    <td>${item[23] || ''}</td>
+                    <td>${item[24] || ''}</td>
+                    <td>${item[25] || ''}</td>
                 `;
                 tableBody.appendChild(row);
             });
@@ -210,7 +226,6 @@
                 filteredData = filteredData.filter(item => item[10] === parseInt(selectedTg));
             }
             
-            // Re-aplica a ordenação atual aos dados filtrados
             if (currentSortColumn !== null) {
                 const columnIndex = parseInt(currentSortColumn.dataset.columnIndex);
                 const dataType = currentSortColumn.dataset.type;
@@ -246,7 +261,6 @@
             });
         }
 
-        // Eventos para os filtros
         callsignFilter.addEventListener('change', () => {
             localStorage.setItem('selectedCallsign', callsignFilter.value);
             applyFiltersAndRender();
@@ -256,7 +270,6 @@
             applyFiltersAndRender();
         });
         
-        // Evento para limpar os filtros
         clearFiltersBtn.addEventListener('click', () => {
             callsignFilter.value = '';
             tgFilter.value = '';
@@ -265,13 +278,11 @@
             applyFiltersAndRender();
         });
 
-        // Eventos para a ordenação da tabela
         tableHeaders.forEach(header => {
             header.addEventListener('click', () => {
                 const columnIndex = header.dataset.columnIndex;
                 const dataType = header.dataset.type;
                 
-                // Determina a nova direção de ordenação
                 if (currentSortColumn === header) {
                     currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
                 } else {
@@ -282,16 +293,13 @@
                     currentSortDirection = 'asc';
                 }
 
-                // Adiciona a classe CSS para o ícone
                 header.classList.remove('sorted-asc', 'sorted-desc');
                 header.classList.add(`sorted-${currentSortDirection}`);
                 
-                // Re-ordena e re-renderiza a tabela
                 applyFiltersAndRender();
             });
         });
 
-        // Função principal para buscar dados da API
         async function fetchData() {
             loadingMessage.style.display = 'block';
             table.style.display = 'none';
@@ -303,7 +311,6 @@
                 
                 populateFilters(allData);
 
-                // Carregar as seleções do localStorage e aplicar os filtros
                 const savedCallsign = localStorage.getItem('selectedCallsign');
                 const savedTg = localStorage.getItem('selectedTg');
 
@@ -322,10 +329,7 @@
             }
         }
 
-        // Chamar a função principal quando a página carregar
         fetchData();
-
-        // Atualizar os dados a cada 30 segundos
         setInterval(fetchData, 30000);
     </script>
 
