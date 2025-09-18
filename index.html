@@ -156,11 +156,23 @@
         const table = document.getElementById('heardTable');
         const tableHeaders = document.querySelectorAll('#heardTable thead th');
 
+        function formatDuration(seconds) {
+            if (isNaN(seconds) || seconds < 0) {
+                return '';
+            }
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = Math.floor(seconds % 60);
+            const formattedMinutes = String(minutes).padStart(2, '0');
+            const formattedSeconds = String(remainingSeconds).padStart(2, '0');
+            return `${formattedMinutes}:${formattedSeconds}`;
+        }
+        
         function renderTable(dataToRender) {
             tableBody.innerHTML = '';
             dataToRender.forEach(item => {
-                // Formata o valor de Loss Rate, com 0% se não houver dados.
                 const lossRateValue = (item[17] || item[17] === 0) ? `${item[17]}%` : '0%';
+                const durationSeconds = item[14] * 0.06;
+                const formattedDuration = formatDuration(durationSeconds);
                 
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -172,7 +184,7 @@
                     <td>${item[9] || ''}</td>
                     <td>${item[10] || ''}</td>
                     <td>${item[13] || ''}</td>
-                    <td>${(item[14] * 0.06).toFixed(2) || ''}</td>
+                    <td>${formattedDuration}</td>
                     <td>${item[15] || ''}</td>
                     <td>${lossRateValue}</td>
                     <td>${item[20] || ''}</td>
